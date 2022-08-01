@@ -20,6 +20,10 @@ public class Sections {
         sections.add(section);
     }
 
+    public void addSection(int index, Section section) {
+        sections.add(index, section);
+    }
+
     public List<Station> getStations() {
         return sections.stream()
                 .map(Section::getStations)

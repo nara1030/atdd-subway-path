@@ -15,6 +15,7 @@ import static nextstep.subway.acceptance.StationSteps.지하철역_생성_요청
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayName("지하철 구간 관리 기능")
 class LineSectionAcceptanceTest extends AcceptanceTest {
@@ -103,12 +104,20 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
         신규_추가역 = 지하철역_생성_요청("신규_추가역").jsonPath().getLong("id");
 
         // when(then)
-        assertAll(() -> {
-            assertThatThrownBy(() -> 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
-           // 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(신규_추가역, 양재역));
-        });
+//        assertThatThrownBy(() -> 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역, 10)))
+//                    .isInstanceOf(IllegalArgumentException.class);
+//                    .hasMessage("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
+        ExtractableResponse<Response> response = 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역, 10));
+        System.out.println("====");
+        System.out.println(response.jsonPath().getString("."));
+        assertThat(response.jsonPath().getString("errorMessage")).isEqualTo("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
+
+//        assertAll(() -> {
+//            assertThatThrownBy(() -> 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역, 10)))
+//                    .isInstanceOf(IllegalArgumentException.class)
+//                    .hasMessage("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
+//           // 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(신규_추가역, 양재역));
+//        });
     }
 
     /**
@@ -163,11 +172,15 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
         return lineCreateParams;
     }
 
-    private Map<String, String> createSectionCreateParams(Long upStationId, Long downStationId) {
+    private Map<String, String> createSectionCreateParams(Long upStationId, Long downStationId, int distance) {
         Map<String, String> params = new HashMap<>();
         params.put("upStationId", upStationId + "");
         params.put("downStationId", downStationId + "");
-        params.put("distance", 6 + "");
+        params.put("distance", distance + "");
         return params;
+    }
+
+    private Map<String, String> createSectionCreateParams(Long upStationId, Long downStationId) {
+        return createSectionCreateParams(upStationId, downStationId, 6);
     }
 }
