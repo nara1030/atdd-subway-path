@@ -13,6 +13,8 @@ import java.util.Map;
 import static nextstep.subway.acceptance.LineSteps.*;
 import static nextstep.subway.acceptance.StationSteps.지하철역_생성_요청;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 @DisplayName("지하철 구간 관리 기능")
 class LineSectionAcceptanceTest extends AcceptanceTest {
@@ -20,6 +22,7 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
 
     private Long 강남역;
     private Long 양재역;
+    private Long 신규_추가역;
 
     /**
      * Given 지하철역과 노선 생성을 요청 하고
@@ -42,7 +45,6 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
     @DisplayName("지하철 노선에 구간을 등록")
     @Test
     void addLineSection() {
-        System.out.println("이전");
         // when
         Long 정자역 = 지하철역_생성_요청("정자역").jsonPath().getLong("id");
         지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(양재역, 정자역));
@@ -61,6 +63,12 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
     @DisplayName("역 사이에 새로운 역을 등록")
     @Test
     void addSectionToMiddleOfLine() {
+        // when
+        신규_추가역 = 지하철역_생성_요청("신규_추가역").jsonPath().getLong("id");
+
+
+        // then
+
     }
 
     /**
@@ -91,6 +99,16 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
     @DisplayName("기존 구간 길이보다 같거나 긴 경우 역 사이에 새로운 역 등록 실패")
     @Test
     void failToAddSectionToMiddleOfLine() {
+        // given
+        신규_추가역 = 지하철역_생성_요청("신규_추가역").jsonPath().getLong("id");
+
+        // when(then)
+        assertAll(() -> {
+            assertThatThrownBy(() -> 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
+           // 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(신규_추가역, 양재역));
+        });
     }
 
     /**

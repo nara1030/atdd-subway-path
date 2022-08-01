@@ -2,6 +2,8 @@ package nextstep.subway.domain;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 @Entity
 public class Line {
@@ -32,6 +34,45 @@ public class Line {
         sections.addSection(new Section(this, upStation, downStation, distance));
     }
 
+    public void addSection2(Station upStation, Station downStation, int distance) {
+        // Exception(saveLine이 아닌 addSection만 타야 함..)
+        getStations().stream()
+                .filter(station -> {
+                    return station.equals(upStation) || station.equals(downStation);
+                })
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("신규 구간의 역과 일치하는 역이 존재하지 않습니다."));
+
+        List<Station> stationsToAdd = List.of(upStation, downStation);
+        stationsToAdd.stream()
+                .filter(stationToAdd -> getStations().stream().anyMatch(Predicate.isEqual(stationToAdd)))
+                .findFirst()
+                .ifPresent(station -> new IllegalArgumentException("신규 구간의 역이 이미 존재합니다."));
+
+        getSections().stream()
+                .filter(section -> {
+                    return (section.getUpStation().equals(upStation) && section.getDistance() <= distance)
+                            || (section.getDownStation().equals(downStation) && section.getDistance() <= distance);
+                })
+                .findFirst()
+                .ifPresent(section -> new IllegalArgumentException("구간 거리가 같거나 커 역 중간에 등록이 불가합니다."));
+
+        // Logic
+        getSections().stream()
+                .filter(section -> section.getUpStation().equals(upStation) && section.getDistance() > distance)
+                .findFirst();
+
+        if (getFirstStation().equals(upStation)) {
+
+        }
+
+        if (getFirstStation().equals(downStation)) {
+
+        }
+
+        sections.addSection(new Section(this, upStation, downStation, distance));
+    }
+
     public List<Station> getStations() {
         return sections.getStations();
     }
@@ -42,6 +83,10 @@ public class Line {
         }
 
         sections.removeSection(stationId);
+    }
+
+    public Station getFirstStation() {
+        return sections.getFirstStation();
     }
 
     public Station getLastStation() {

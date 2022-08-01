@@ -28,6 +28,10 @@ public class Sections {
                 .collect(Collectors.toList());
     }
 
+    public Station getFirstStation() {
+        return sections.get(0).getUpStation();
+    }
+
     public Station getLastStation() {
         return sections.get(sections.size() - 1).getDownStation();
     }
