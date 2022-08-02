@@ -1,9 +1,9 @@
 package nextstep.subway.exception;
 
-public class FailToAddSectionException extends RuntimeException {
+public class NonStationOfSectionExistsException extends RuntimeException {
     private String errorMessage;
 
-    public FailToAddSectionException(String errorMessage) {
+    public NonStationOfSectionExistsException(String errorMessage) {
         this.errorMessage = errorMessage;
     }
 

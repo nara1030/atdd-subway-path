@@ -23,7 +23,8 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
 
     private Long 강남역;
     private Long 양재역;
-    private Long 신규_추가역;
+    private Long 신규_추가역1;
+    private Long 신규_추가역2;
 
     /**
      * Given 지하철역과 노선 생성을 요청 하고
@@ -65,7 +66,7 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
     @Test
     void addSectionToMiddleOfLine() {
         // when
-        신규_추가역 = 지하철역_생성_요청("신규_추가역").jsonPath().getLong("id");
+        신규_추가역1 = 지하철역_생성_요청("신규_추가역").jsonPath().getLong("id");
 
 
         // then
@@ -80,6 +81,16 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
     @DisplayName("새로운 역을 상행 종점으로 등록")
     @Test
     void addSectionToStartOfLine() {
+        // given
+        신규_추가역1 = 지하철역_생성_요청("신규_추가역1").jsonPath().getLong("id");
+
+        // when
+        ExtractableResponse<Response> response = 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(신규_추가역1, 강남역, 10));
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+
+        // then
+        response = 지하철_노선_조회_요청(신분당선);
+        System.out.println(response.jsonPath().getString("."));
     }
 
     /**
@@ -101,23 +112,16 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
     @Test
     void failToAddSectionToMiddleOfLine() {
         // given
-        신규_추가역 = 지하철역_생성_요청("신규_추가역").jsonPath().getLong("id");
+        신규_추가역1 = 지하철역_생성_요청("신규_추가역1").jsonPath().getLong("id");
 
         // when(then)
-//        assertThatThrownBy(() -> 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역, 10)))
-//                    .isInstanceOf(IllegalArgumentException.class);
-//                    .hasMessage("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
-        ExtractableResponse<Response> response = 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역, 10));
-        System.out.println("====");
-        System.out.println(response.jsonPath().getString("."));
-        assertThat(response.jsonPath().getString("errorMessage")).isEqualTo("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
+        assertAll(() -> {
+            ExtractableResponse<Response> response = 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역1, 10));
+            assertThat(response.jsonPath().getString("errorMessage")).isEqualTo("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
 
-//        assertAll(() -> {
-//            assertThatThrownBy(() -> 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역, 10)))
-//                    .isInstanceOf(IllegalArgumentException.class)
-//                    .hasMessage("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
-//           // 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(신규_추가역, 양재역));
-//        });
+            response = 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 신규_추가역1, 13));
+            assertThat(response.jsonPath().getString("errorMessage")).isEqualTo("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
+        });
     }
 
     /**
@@ -128,6 +132,9 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
     @DisplayName("상하행역 모두 존재하는 경우 등록 실패")
     @Test
     void failToAddSectionIfAllStationsExist() {
+        // when(then)
+        ExtractableResponse<Response> response = 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(강남역, 양재역, 3));
+        assertThat(response.jsonPath().getString("errorMessage")).isEqualTo("신규 구간의 역이 이미 존재합니다.");
     }
 
     /**
@@ -138,6 +145,13 @@ class LineSectionAcceptanceTest extends AcceptanceTest {
     @DisplayName("상하행역 모두 존재하지 않는 경우 등록 실패")
     @Test
     void failToAddSectionIfNoStationsExists() {
+        // given
+        신규_추가역1 = 지하철역_생성_요청("신규_추가역1").jsonPath().getLong("id");
+        신규_추가역2 = 지하철역_생성_요청("신규_추가역2").jsonPath().getLong("id");
+
+        // when(then)
+        ExtractableResponse<Response> response = 지하철_노선에_지하철_구간_생성_요청(신분당선, createSectionCreateParams(신규_추가역1, 신규_추가역2, 3));
+        assertThat(response.jsonPath().getString("errorMessage")).isEqualTo("신규 구간의 역과 일치하는 역이 존재하지 않습니다.");
     }
 
     /**

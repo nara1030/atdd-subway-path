@@ -1,10 +1,11 @@
 package nextstep.subway.domain;
 
-import nextstep.subway.exception.FailToAddSectionException;
+import nextstep.subway.exception.AllStationsOfSectionExistException;
+import nextstep.subway.exception.InvalidDistanceOfSectionException;
+import nextstep.subway.exception.NonStationOfSectionExistsException;
 
 import javax.persistence.*;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -48,14 +49,14 @@ public class Line {
         getStations().stream()
                 .filter(station -> station.equals(upStation) || station.equals(downStation))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("신규 구간의 역과 일치하는 역이 존재하지 않습니다."));
+                .orElseThrow(() -> new NonStationOfSectionExistsException("신규 구간의 역과 일치하는 역이 존재하지 않습니다."));
 
         List<Station> stationsToAdd = List.of(upStation, downStation);
         List<Station> stationsMatched = stationsToAdd.stream()
                 .filter(stationToAdd -> getStations().stream().anyMatch(Predicate.isEqual(stationToAdd)))
                 .collect(Collectors.toList());
         if (stationsToAdd.equals(stationsMatched)) {
-            throw new IllegalArgumentException("신규 구간의 역이 이미 존재합니다.");
+            throw new AllStationsOfSectionExistException("신규 구간의 역이 이미 존재합니다.");
         }
 
         getSections().stream()
@@ -63,20 +64,10 @@ public class Line {
                     return (section.getUpStation().equals(upStation) && section.getDistance() <= distance)
                             || (section.getDownStation().equals(downStation) && section.getDistance() <= distance);
                 })
-                .findAny()
+                .findFirst()
                 .ifPresent(section -> {
-                    throw new FailToAddSectionException("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
+                    throw new InvalidDistanceOfSectionException("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
                 });
-
-//        getSections().stream()
-//                .filter(section -> {
-//                    return (section.getUpStation().equals(upStation) && section.getDistance() <= distance)
-//                            || (section.getDownStation().equals(downStation) && section.getDistance() <= distance);
-//                })
-//                .findFirst()
-//                .ifPresent(section -> {
-//                    throw new IllegalArgumentException("구간 거리가 같거나 커 역 중간에 등록이 불가합니다.");
-//                });
 
         // Business Logic
         if (getFirstStation().equals(downStation)) {
